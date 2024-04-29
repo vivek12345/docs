@@ -1,0 +1,3404 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+      "version": "v1.0",
+      "title": "Qoala Claim API",
+      "license": {
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "x-logo": {
+        "url": "https://assets.qoala.app/qoala/email-transparant.png"
+      },
+      "description": "# Introduction\n\nWelcome to the Qoala API! Our API provides you with access to the Qoala platform, allowing you to perform actions like creating policies across various product categories and submitting new claims, among other functionalities.\nFor your convenience, we have included a straightforward example in the payload to assist you in seamlessly integrating with our platform. You can also find code examples in the shaded area on the right.\nIf you have any inquiries or need assistance with our API, please do not hesitate to contact our dedicated developer support team. We are here to assist you!\n\n# Product Categories\n\nQoala, functioning as an insurance broker, offers a diverse range of insurance products that encompass various functionalities and benefits. Consequently, we have organized these products into distinct groups based on their corresponding functions. There are four primary categories into which we classify these products:\n\n1. Travel\nThe Travel category encompasses the following subcategories:\n\n- Flight\n- Train\n- Bus\n- Hotel\n- Experience\n\n2. Gadget\nThe Gadget category includes the following subcategories:\n\n- Smartphone\n- Electronic\n\n3. Finance\n\n4. Health\n\n>It's important to note that Finance and Health do not have any subcategories at this time.\n\n# Host\n\nEnvironment|Host Address\n------------- | -------------\nStaging|https://api-staging.qoala.app\nProduction|https://api.qoala.app\n\n# Authentication\n\nQoala Partnership utilizes API keys to grant access to the API. You can request a new API key from Qoala Engineering. \nQoala Partnership requires the API key to be included in the header of all API requests made to our services. The header should appear as follows:\n`x-api-key: abcdefg`\n\n> To use the x-api-key, refer to the example below:\n\n```shell\ncurl --location --request {METHOD} '{{HOST_URL}}' \\\n--header 'x-api-key: abcdefg' \\\n--header 'Content-Type: application/json' \\\n--data-raw '{}'\n```\n\n> Make sure to replace `abcdefg` with your API key.\n"
+    },
+    "servers": [
+      {
+        "url": "https://api-staging.qoala.app"
+      },
+      {
+        "url": "https://api.uat.qoala.app"
+      },
+      {
+        "url": "https://api.qoala.app"
+      }
+    ],
+    "security": [
+      {
+        "ApiKeyAuth": []
+      }
+    ],
+    "tags": [
+      {
+        "name": "API Specification",
+        "description": "Claim API documentation consist of create claim, get claim detail or status, claim cancellation and claim pool detail or update claim documents"
+      }
+    ],
+    "paths": {
+      "/api/v2/claims/partner/create": {
+        "post": {
+          "tags": [
+            "API Specification"
+          ],
+          "summary": "Create Claim",
+          "description": "Partners could use this endpoint to generate and create a new claim. Qoala will validate and make sure the policy is claimable. Qoala will share the claim number in the response and if needed could also notify the partner via callback Integration.\n### List of Claim Status\n\n| Status Code                | Claim Status (Subject)          | Description                                     |\n| --------------------------- | ------------------------------- | ----------------------------------------------- |\n| `CLAIM_INITIATE`            | Claim initiated                 | When the claimer successfully submitted a claim |\n| `QOALA_CLAIM_APPROVE`       | Claim received by Qoala         | Qoala approved the claim                        |\n| `QOALA_CLAIM_REJECT`        | Claim rejected by Qoala         | Qoala rejects the claim                         |\n| `INSURANCE_CLAIM_APPROVE`   | Claim approved by Insurance      | Insurance approved the claim                    |\n| `INSURANCE_CLAIM_REJECT`    | Claim rejected by Insurance      | Insurance rejected the claim                    |\n| `INSURANCE_CLAIM_PAID`      | Claim paid by Insurance           | Claim already paid by insurance                 |\n| `INSURANCE_CLAIM_WAITING_PAID` | Claim Waiting paid            | Claim already approved by insurance and waiting for paid |\n\nEach status code corresponds to a specific claim status, providing information about the state of the claim in the system.\n",
+          "operationId": "createClaim",
+          "security": [
+            {
+              "ApiKeyAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "example": "success"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Claim Service success"
+                      },
+                      "code": {
+                        "type": "number",
+                        "example": 200
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "number": {
+                            "type": "string",
+                            "example": "C-123445"
+                          },
+                          "last_status": {
+                            "type": "string",
+                            "example": "CLAIM_INITIATED"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Unauthorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string",
+                        "description": "http code response",
+                        "example": 400
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "description": "qoala system error code for error classification\n    \n### List of Error Code detail\n\n|Error Code | HTTP Status | Description|\n|----------|-------------|------------|\n|CLAIM-CREATE-001 | 400 | Invalid Body request|\n|CLAIM-CREATE-003 | 400 | Policy Not Available|\n|CLAIM-CREATE-004 | 400 | Product Not Found|\n|CLAIM-CREATE-006 | 400 | Failed claim Reach maximum Limitation|\n|CLAIM-CREATE-007 | 400 | Invalid Time|\n|CLAIM-CREATE-018 | 400 | Benefit Code Not Valid|\n",
+                        "example": "CLAIM-CREATE-006"
+                      },
+                      "message": {
+                        "type": "string",
+                        "description": "status of response, it will contain failed",
+                        "example": "failed claim, reach maximum limitation"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "number",
+                        "description": "http code response",
+                        "example": 401
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "description": "qoala system error code for invalid token\n\n### List of Error Code detail\n| Error Code | HTTP Status | Description |\n|---|---|---|\n| QC-CLT-KEYA-V1-003 | 401 | Invalid Permission |\n",
+                        "example": "QEC-ERR-401-01"
+                      },
+                      "message": {
+                        "type": "string",
+                        "description": "short message explains about the failed response",
+                        "example": "invalid unauthorized"
+                      },
+                      "status": {
+                        "type": "string",
+                        "description": "status of response, it will contain failed",
+                        "example": "failed"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "number",
+                        "description": "http code response",
+                        "example": 500
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "description": "qoala system error code for error classification\n\n### List of Error Code detail\n|Error Code | HTTP Status | Description|\n|----------|-------------|------------|\n|CLAIM-CREATE-008 | 500 | Failed claim Reach maximum Limitation in Benefit Level|\n",
+                        "example": "CLAIM-ERR-001"
+                      },
+                      "message": {
+                        "type": "string",
+                        "description": "short message explains about the failed response",
+                        "example": "internal server error"
+                      },
+                      "status": {
+                        "type": "string",
+                        "description": "status of response, it will contain failed",
+                        "example": "failed"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Claim for Travel Product": {
+                    "$ref": "#/components/examples/createClaimTravelProduct"
+                  },
+                  "Claim for Credit Insurance With Reinstatement": {
+                    "$ref": "#/components/examples/createClaimCreditInsuranceWithReinstatement"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "currency_code",
+                    "country_code",
+                    "policy_number",
+                    "user_channel",
+                    "partner_code",
+                    "product",
+                    "total_amount"
+                  ],
+                  "properties": {
+                    "currency_code": {
+                      "description": "Claim currency",
+                      "type": "string",
+                      "example": "IDR"
+                    },
+                    "country_code": {
+                      "description": "Claim country code",
+                      "type": "string",
+                      "example": "ID"
+                    },
+                    "user_channel": {
+                      "description": "Channel where the claim comes from",
+                      "type": "string",
+                      "example": "PARTNERSHIP"
+                    },
+                    "partner_code": {
+                      "description": "Partner code predefined by Qoala",
+                      "type": "string",
+                      "example": "ABC"
+                    },
+                    "partner_claim_id": {
+                      "description": "Unique claim identifier generated by the partner system",
+                      "type": "string",
+                      "example": "C12345"
+                    },
+                    "policy_number": {
+                      "description": "Unique policy number generated by the Qoala system",
+                      "type": "string",
+                      "example": "F-CRDC-001-20230802"
+                    },
+                    "product": {
+                      "description": "Product information",
+                      "type": "object",
+                      "required": [
+                        "category",
+                        "code",
+                        "benefit_code"
+                      ],
+                      "properties": {
+                        "category": {
+                          "type": "string",
+                          "enum": [
+                            "GADGET",
+                            "TRAVEL",
+                            "FINANCE",
+                            "MICROHEALTH"
+                          ]
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "PA-123",
+                          "description": "Product code generated by Qoala"
+                        },
+                        "benefit_code": {
+                          "type": "string",
+                          "example": "BE-1234",
+                          "description": "Benefit Code generated by Qoala"
+                        }
+                      }
+                    },
+                    "claimant_data": {
+                      "description": "Claimant information",
+                      "type": "object",
+                      "required": [
+                        "full_name"
+                      ],
+                      "properties": {
+                        "full_name": {
+                          "type": "string",
+                          "description": "Claimant full name"
+                        },
+                        "phone_number": {
+                          "type": "string",
+                          "description": "Claimant phone number"
+                        }
+                      }
+                    },
+                    "form_data": {
+                      "description": "Claim form Data",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "example": "Alamat",
+                            "description": "name of data"
+                          },
+                          "value": {
+                            "type": "string",
+                            "example": 85778,
+                            "description": "value of data"
+                          }
+                        }
+                      }
+                    },
+                    "covered_data": {
+                      "description": "insureds information",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "$ref": "#/components/schemas/Insured"
+                      }
+                    },
+                    "claim_additional_info": {
+                      "description": "Claim additional info only applicable for specific product category",
+                      "type": "object",
+                      "properties": {
+                        "loan_id": {
+                          "type": "string",
+                          "description": "partner transaction number or loan id // required for Credit Insurance with reinstatement product"
+                        },
+                        "borrower_name": {
+                          "type": "string",
+                          "description": "Borrower name // required for Credit Insurance with reinstatement product"
+                        },
+                        "beneficiary_name": {
+                          "type": "string",
+                          "description": "Beneficiary or lender name // required for Credit Insurance with reinstatement product"
+                        },
+                        "last_payment_date": {
+                          "type": "string",
+                          "description": "last payment date, if the loan hasnt been paid or loan is less than 30 days please put loan start date // required for Credit Insurance with reinstatement product"
+                        },
+                        "last_collection_date": {
+                          "type": "string",
+                          "description": "last collection date from the partner // required for Credit Insurance with reinstatement product"
+                        },
+                        "outstanding_amount": {
+                          "type": "number",
+                          "description": "remaining loan"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Payload for creating claim // required for Credit Insurance with reinstatement product",
+            "required": true
+          }
+        }
+      },
+      "/api/v2/claims/partner/cancel": {
+        "patch": {
+          "tags": [
+            "API Specification"
+          ],
+          "summary": "Cancel Claim",
+          "description": "Claim cancellation",
+          "operationId": "cancelClaim",
+          "security": [
+            {
+              "ApiKeyAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "example": "success"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Claim Service success"
+                      },
+                      "code": {
+                        "type": "number",
+                        "example": 200
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "claim_number": {
+                            "type": "string",
+                            "example": "C-123445"
+                          },
+                          "status": {
+                            "type": "string",
+                            "example": "CLAIM_CANCELLED"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string",
+                        "example": 401
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "failed"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Unauthorized token"
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "example": "QC-CLT-KEYA-V1-003"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "number",
+                        "example": 500
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "example": "CLAIM-ERR-001"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "internal server error"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "failed"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "claim_number": {
+                      "type": "string",
+                      "description": "unique identifier for claim created by qoala system",
+                      "example": "C-123455"
+                    },
+                    "parent_category": {
+                      "type": "string",
+                      "example": "microhealth",
+                      "description": "category of product",
+                      "enum": [
+                        "microhealth",
+                        "finance",
+                        "gadget",
+                        "travel"
+                      ]
+                    },
+                    "reason": {
+                      "type": "string",
+                      "description": "explain the reason for cancellation briefly",
+                      "example": "wrong claim number"
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Payload for cancelling claim",
+            "required": true
+          }
+        }
+      },
+      "/api/v2/claims/partner/update/presign": {
+        "post": {
+          "tags": [
+            "API Specification"
+          ],
+          "summary": "Upload claim documents",
+          "description": "Presign url to upload document",
+          "operationId": "presignCreateClaim",
+          "security": [
+            {
+              "ApiKeyAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "example": "success"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Claim Service success"
+                      },
+                      "code": {
+                        "type": "number",
+                        "example": 200
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "claim_number": {
+                            "type": "string",
+                            "description": "claim unique number generated by qoala system",
+                            "example": "C-123445"
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "last status of claim",
+                            "example": "CLAIM_SUBMITTED"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string",
+                        "example": 401
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "failed"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Unauthorized token"
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "example": "QC-CLT-KEYA-V1-003"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "number",
+                        "example": 500
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "example": "CLAIM-ERR-001"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "internal server error"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "failed"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "claim_number": {
+                      "type": "string",
+                      "description": "unique identifier for claim created by qoala system",
+                      "example": "C-123455"
+                    },
+                    "file_name": {
+                      "type": "string",
+                      "example": "fileName-1234.png",
+                      "description": "Document name"
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "type of document",
+                      "example": "NATIONAL_ID"
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Payload for creating presigned url claim",
+            "required": true
+          }
+        },
+        "put": {
+          "tags": [
+            "API Specification"
+          ],
+          "summary": "Update claim documents",
+          "description": "Presign url to upload document",
+          "operationId": "presignUploadClaim",
+          "security": [
+            {
+              "ApiKeyAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "example": "success"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Claim Service success"
+                      },
+                      "code": {
+                        "type": "number",
+                        "example": 200
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "claim_number": {
+                            "type": "string",
+                            "description": "claim unique number generated by qoala system",
+                            "example": "C-123445"
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "last status of claim",
+                            "example": "CLAIM_SUBMITTED"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string",
+                        "example": 401
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "failed"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Unauthorized token"
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "example": "QC-CLT-KEYA-V1-003"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "number",
+                        "example": 500
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "example": "CLAIM-ERR-001"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "internal server error"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "failed"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "maxLength": 12345
+                }
+              }
+            },
+            "description": "Payload for creating presigned url claim",
+            "required": true
+          }
+        }
+      },
+      "/api/v2/products/finance/partner/products/stoploss/{claim_pool_code}": {
+        "get": {
+          "tags": [
+            "API Specification"
+          ],
+          "summary": "Get Claim Pool",
+          "description": "this endpoint can be used by the partner to get the claim pool balance",
+          "operationId": "getPool",
+          "security": [
+            {
+              "ApiKeyAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "example": "success"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Success get stoploss detail"
+                      },
+                      "code": {
+                        "type": "number",
+                        "example": 200
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "unique code for certain claim pool",
+                            "example": "CLAIM_POOL_CODE"
+                          },
+                          "partner_code": {
+                            "type": "string",
+                            "description": "partner code associated for certain claim pool",
+                            "example": "PARTNER_CODE"
+                          },
+                          "insurance_code": {
+                            "type": "string",
+                            "description": "insurance code associated for certain claim pool",
+                            "example": "INSURANCE_CODE"
+                          },
+                          "total_stoploss_amount": {
+                            "type": "number",
+                            "description": "Total claim pool collected",
+                            "format": "float64",
+                            "example": 1621256
+                          },
+                          "total_pending_claim_amount": {
+                            "type": "number",
+                            "description": "Total approved claim but haven't been disbursed (will be disburse in the next day)",
+                            "format": "float64",
+                            "example": 1621256
+                          },
+                          "total_claim_amount": {
+                            "type": "number",
+                            "description": "Total claim pool has been claimed",
+                            "format": "float64",
+                            "example": 1621256
+                          },
+                          "total_balance": {
+                            "type": "number",
+                            "description": "Available amount claim pool",
+                            "format": "float64",
+                            "example": 1621256
+                          },
+                          "total_available_claim_pool": {
+                            "type": "number",
+                            "format": "float64",
+                            "example": 1621256
+                          },
+                          "products_code": {
+                            "type": "array",
+                            "description": "List of products associated with this claim pool code",
+                            "items": {
+                              "type": "string"
+                            },
+                            "example": [
+                              "PRODUCT_CODE1",
+                              "PRODUCT_CODE2"
+                            ]
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "description": "when the claim pool is created",
+                            "format": "date-time"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "description": "when the last update claim pool",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Unauthorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string",
+                        "example": 400
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "example": "CLAIM-CREATE-006"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "failed claim, reach maximum limitation"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string",
+                        "example": 401
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "failed"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Unauthorized request"
+                      },
+                      "data": {
+                        "type": "object",
+                        "example": null
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "number",
+                        "example": 500
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "example": "QES-ERR-001"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "internal server error"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "failed"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "parameters": [
+            {
+              "in": "path",
+              "name": "claim_pool_code",
+              "required": true,
+              "description": "Claim Pool code generated by Qoala",
+              "schema": {
+                "type": "string",
+                "example": "CLAIM_POOL_CODE"
+              }
+            }
+          ]
+        }
+      },
+      "/api/v2/claim/partner/status": {
+        "get": {
+          "tags": [
+            "API Specification"
+          ],
+          "summary": "Get Claim Status",
+          "description": "Get claim status",
+          "operationId": "statusClaim",
+          "security": [
+            {
+              "ApiKeyAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/200status"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "number",
+                        "example": 400
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "example": "CLAIM-GET-001"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Invalid Params"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "failed"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "number",
+                        "example": 401
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "example": "QC-CLT-KEYA-V1-003"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "Invalid Permission"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "failed"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Not Found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "number",
+                        "example": 404
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "example": "CLAIM-GET-005"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "not found"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "failed"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "number",
+                        "example": 500
+                      },
+                      "error_code": {
+                        "type": "string",
+                        "example": "CLAIM-GET-003"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "internal server error"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "failed"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "parameters": [
+            {
+              "in": "query",
+              "name": "policy_number",
+              "required": false,
+              "description": "Unique identifier for policy generated by qoala system. Policy number is optinal parameter only if claim number is provided in the URL.",
+              "schema": {
+                "type": "string",
+                "example": "F-CRDC-1029"
+              }
+            },
+            {
+              "in": "query",
+              "name": "claim_number",
+              "required": true,
+              "description": "Unique identifier for claim created by qoala system. Claim number is optional parameter only if policy number is provided in the URL",
+              "schema": {
+                "type": "string",
+                "example": "C-20211213-GIPC7"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ApiKeyAuth": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "x-api-key"
+        }
+      },
+      "schemas": {
+        "Document": {
+          "type": "object",
+          "properties": {
+            "file_name": {
+              "description": "name of the fale, you can provide the filename include its extention.",
+              "type": "string",
+              "example": "T-FLIGHT-001-20230824-OM94T.pdf"
+            },
+            "type": {
+              "description": "type of document, it is just constant value that categorize of the document.",
+              "type": "string",
+              "examples": [
+                "POLICY_CERTIFICATE",
+                "POLICY_WORDING",
+                "KTP",
+                "ID",
+                "TICKET",
+                "and soon"
+              ]
+            },
+            "url": {
+              "description": "full url to access the document, this is should be public url",
+              "type": "string",
+              "example": "https://api-staging.qoala.app/api/v2/policies/documents/bea04405-97d2-4eb8-b4f6-8db76e6f17ac/files/T-FLIGHT-001-20230824-OM94T.pdf"
+            },
+            "alias": {
+              "description": "document alias",
+              "type": "string",
+              "example": "policy_certificate.pdf"
+            }
+          }
+        },
+        "PolicyBookerHolderRequest": {
+          "required": [
+            "full_name",
+            "email"
+          ],
+          "properties": {
+            "identity_type": {
+              "description": "type of data identity",
+              "type": "string",
+              "example": "BOOKING_NUMBER",
+              "enum": [
+                "KTP",
+                "PASSPORT",
+                "DRIVING_LICENSE",
+                "NATIONAL_ID"
+              ]
+            },
+            "identity_number": {
+              "description": "identity value",
+              "type": "string",
+              "example": 1234567890
+            },
+            "full_name": {
+              "description": "fullname of booker or policy holder",
+              "type": "string",
+              "example": "Budi"
+            },
+            "email": {
+              "description": "email of booker or policy holder, this email will receive policy certificate",
+              "type": "string",
+              "example": "testing123@gmail.com"
+            },
+            "phone_number": {
+              "description": "phone number started with country code but without “+” sign Only accept numeric characters",
+              "type": "string",
+              "example": 6285939225396
+            },
+            "birth_date": {
+              "description": "birth date information in format yyyy-mm-dd",
+              "type": "string",
+              "example": "1990-01-01"
+            },
+            "gender": {
+              "description": "User supplied username",
+              "type": "string",
+              "example": "WOMAN"
+            },
+            "relationship": {
+              "description": "status of relationship",
+              "type": "string",
+              "example": "SINGLE"
+            },
+            "address": {
+              "description": "detail of address",
+              "type": "string",
+              "example": "FLIGHT"
+            },
+            "occupation": {
+              "description": "occupation of person",
+              "type": "string",
+              "example": "Pilot"
+            },
+            "documents": {
+              "description": "supporting documents",
+              "$ref": "#/components/schemas/Document"
+            }
+          }
+        },
+        "InsuredTravel": {
+          "required": [
+            "identity_type",
+            "identity_number",
+            "booking_time",
+            "name",
+            "departure_time",
+            "arrival_time"
+          ],
+          "type": "object",
+          "properties": {
+            "identity_type": {
+              "type": "string",
+              "example": "BOOKING_NUMBER"
+            },
+            "identity_number": {
+              "type": "string",
+              "example": 280323142127
+            },
+            "booking_time": {
+              "type": "string",
+              "example": "2023-02-15T10:00:00Z",
+              "format": "date-time"
+            },
+            "name": {
+              "type": "string",
+              "example": "Garuda Indonesia"
+            },
+            "number": {
+              "type": "string",
+              "example": "GA-654"
+            },
+            "departure": {
+              "type": "string",
+              "example": "CGK"
+            },
+            "departure_time": {
+              "type": "string",
+              "example": "2023-03-01T22:15:00+07:00",
+              "format": "date-time"
+            },
+            "arrival": {
+              "type": "string",
+              "example": "UPG"
+            },
+            "arrival_time": {
+              "type": "string",
+              "example": "2023-03-02T01:50:00+09:00"
+            },
+            "class": {
+              "type": "string",
+              "example": "Economy"
+            },
+            "sub_class": {
+              "type": "string",
+              "example": "J"
+            },
+            "city_origin": {
+              "type": "string",
+              "example": "Jakarta"
+            },
+            "city_destination": {
+              "type": "string",
+              "example": "Makassar"
+            },
+            "country_origin": {
+              "type": "string",
+              "example": "Indonesia"
+            },
+            "country_destination": {
+              "type": "string",
+              "example": "Indonesia"
+            },
+            "timezone_origin": {
+              "type": "string",
+              "example": "Asia/Jakarta"
+            },
+            "timezone_destination": {
+              "type": "string",
+              "example": "Asia/Pontianak"
+            },
+            "total_price_ticket": {
+              "type": "number",
+              "format": "float64",
+              "example": 4145300
+            },
+            "sub_total_price_ticket": {
+              "type": "number",
+              "format": "float64",
+              "example": 4145300
+            },
+            "trip_type": {
+              "type": "string",
+              "description": "trip information",
+              "enum": [
+                "SINGLETRIP",
+                "ROUNDTRIP-1",
+                "ROUNDTRIP-2"
+              ]
+            },
+            "trip_order": {
+              "type": "number",
+              "format": "int",
+              "example": 1
+            },
+            "number_of_room": {
+              "type": "number",
+              "format": "int",
+              "example": 2
+            },
+            "additional_info": {
+              "type": "object"
+            }
+          }
+        },
+        "InsuredUser": {
+          "type": "object",
+          "properties": {
+            "identity_type": {
+              "type": "string",
+              "example": "ID_CARD",
+              "description": "identifier type of user information"
+            },
+            "identity_number": {
+              "type": "string",
+              "example": 12010367678988002,
+              "description": "unique identifier of user information"
+            },
+            "full_name": {
+              "type": "string",
+              "example": "Judiwara Samson",
+              "description": "full name of user information"
+            },
+            "email": {
+              "type": "string",
+              "example": "judiwara123@gmail.com",
+              "description": "email address of user information"
+            },
+            "phone_number": {
+              "type": "string",
+              "example": 81245678910,
+              "description": "phone number of user"
+            },
+            "birth_date": {
+              "type": "string",
+              "example": "13-11-2000",
+              "description": "birth date of user"
+            },
+            "gender": {
+              "type": "string",
+              "example": "Male",
+              "description": "gender of user"
+            },
+            "relationship": {
+              "type": "string",
+              "example": "Wife",
+              "description": "relationship of user within group of insured user in one transaction"
+            },
+            "address": {
+              "type": "string",
+              "example": "Jl. Gatot Subroto no 10, Jakarta",
+              "description": "detail address of user"
+            },
+            "occupation": {
+              "type": "string",
+              "example": "Software Engineer",
+              "description": "occupation of user"
+            },
+            "additional_info": {
+              "type": "object",
+              "example": {
+                "passenger_type": "ADULT",
+                "city": "Jakarta",
+                "country": "Indonesia",
+                "zipcode": "14045",
+                "subject": "sender"
+              },
+              "description": "additional optional information"
+            }
+          }
+        },
+        "InsuredLoan": {
+          "type": "object",
+          "properties": {
+            "identity_type": {
+              "type": "string",
+              "example": "LOAN_NUMBER"
+            },
+            "identity_number": {
+              "type": "string",
+              "example": "LOAN-NUMBER123456"
+            },
+            "loan_amount": {
+              "type": "number",
+              "format": "float64",
+              "example": 100000000
+            },
+            "loan_total_principal": {
+              "type": "number",
+              "format": "float64",
+              "example": 10000
+            },
+            "loan_total_principal_percentage": {
+              "type": "number",
+              "format": "float64",
+              "example": 10000
+            },
+            "tenure_value": {
+              "type": "number",
+              "format": "float64",
+              "example": 90
+            },
+            "tenure_period": {
+              "type": "string",
+              "example": "DAYS"
+            },
+            "interest_rate": {
+              "type": "number",
+              "format": "float64",
+              "example": 9.4
+            },
+            "interest_period": {
+              "type": "string",
+              "example": "YEAR"
+            },
+            "additional_info": {
+              "type": "object",
+              "example": {}
+            }
+          }
+        },
+        "InsuredGadget": {
+          "required": [
+            "identity_type",
+            "identity_number",
+            "sum_insured",
+            "brand",
+            "model",
+            "device_category"
+          ],
+          "type": "object",
+          "properties": {
+            "identity_type": {
+              "type": "string",
+              "example": "IMEI",
+              "description": "type of device identification"
+            },
+            "identity_number": {
+              "type": "string",
+              "example": 517236118991231800,
+              "description": "value of device identification"
+            },
+            "sum_insured": {
+              "type": "number",
+              "format": "float64",
+              "example": 100000,
+              "description": "amount of insured"
+            },
+            "manufacturer": {
+              "type": "string",
+              "example": "Apple",
+              "description": "manufacture of device"
+            },
+            "brand": {
+              "type": "string",
+              "example": "Apple",
+              "description": "brand of device"
+            },
+            "series": {
+              "type": "string",
+              "example": "A2643",
+              "description": "series of device"
+            },
+            "model": {
+              "type": "string",
+              "example": "Iphone 13 Pro Max",
+              "description": "model of device"
+            },
+            "activation_number": {
+              "type": "string",
+              "example": 876543345687654,
+              "description": "activation number of device"
+            },
+            "external_url": {
+              "type": "string",
+              "example": "http://url_here",
+              "description": "external url for activation"
+            },
+            "upload_activation_at": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2022-10-11T00:00:00Z",
+              "description": "time of activation"
+            },
+            "device_category": {
+              "type": "string",
+              "example": "SMARTPHONE",
+              "enum": [
+                "SMARTPHONE",
+                "TABLET",
+                "SMARTWATCH",
+                "LAPTOP",
+                "OTHERS"
+              ],
+              "description": "category of device"
+            },
+            "device_price": {
+              "type": "number",
+              "format": "float64",
+              "example": 10000000,
+              "description": "price of device"
+            },
+            "deductible_info": {
+              "type": "object",
+              "description": "information of deduction",
+              "properties": {
+                "unit_fee": {
+                  "type": "string",
+                  "enum": [
+                    "STATIC",
+                    "PERCENTAGE"
+                  ]
+                },
+                "unit_fee_amount": {
+                  "type": "number",
+                  "format": "float64",
+                  "example": 910
+                }
+              }
+            },
+            "covered_type_unit": {
+              "type": "string",
+              "example": "MONTH",
+              "description": "unit of covered type",
+              "enum": [
+                "DAY",
+                "MONTH",
+                "YEAR"
+              ]
+            },
+            "covered_type_max": {
+              "type": "number",
+              "example": 1,
+              "description": "maximum number of covered period or tenure"
+            }
+          }
+        },
+        "InsuredMotor": {
+          "type": "object",
+          "properties": {
+            "identity_type": {
+              "type": "string",
+              "example": "LOAN_NUMBER"
+            },
+            "identity_number": {
+              "type": "string",
+              "example": "LOAN-NUMBER123456"
+            },
+            "manufacturer": {
+              "type": "string",
+              "example": "Yamaha"
+            },
+            "brand": {
+              "type": "string",
+              "example": "Yamaha"
+            },
+            "series": {
+              "type": "string",
+              "example": "R6"
+            },
+            "condition": {
+              "type": "string",
+              "example": "new"
+            },
+            "chasis_number": {
+              "type": "string",
+              "example": 2
+            },
+            "engine_number": {
+              "type": "string",
+              "example": 5647890356765432
+            },
+            "registration_number": {
+              "type": "string",
+              "example": 82347694354533
+            },
+            "year": {
+              "type": "number",
+              "format": "int",
+              "example": 2022
+            },
+            "price": {
+              "type": "number",
+              "format": "float64",
+              "example": 20000000
+            }
+          }
+        },
+        "InsuredShipping": {
+          "required": [
+            "identity_type",
+            "identity_number"
+          ],
+          "type": "object",
+          "properties": {
+            "carrier": {
+              "type": "string",
+              "example": "JNE",
+              "description": "Name of carrier that provide shipping service example: JNE, FEDEX, etc"
+            },
+            "identity_type": {
+              "type": "string",
+              "example": "TRACKING_NUMBER",
+              "description": "Identifier type of shipping"
+            },
+            "identity_number": {
+              "type": "string",
+              "example": 280323142127,
+              "description": "Unique value as identifier number to differentiate each shipping"
+            },
+            "service": {
+              "type": "string",
+              "example": "Reguler, Sameday, Instant",
+              "description": "Type of service offered by shipping provide"
+            },
+            "cost": {
+              "type": "number",
+              "example": 10000,
+              "description": "Price of shipping service"
+            },
+            "total_package_price": {
+              "type": "number",
+              "example": 50000,
+              "description": "Total package price"
+            },
+            "estimated_delivery_time": {
+              "type": "string",
+              "example": "2023-02-15T10:00:00Z",
+              "format": "date-time",
+              "description": "Time estimation when the package will be received by the recipient"
+            }
+          }
+        },
+        "InsuredPackage": {
+          "required": [
+            "identity_type",
+            "identity_number"
+          ],
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "example": "TV Samsung 12\"",
+              "description": "Name of product"
+            },
+            "identity_type": {
+              "type": "string",
+              "example": "BARCODE_NUMBER",
+              "description": "Identifier type of product"
+            },
+            "identity_number": {
+              "type": "string",
+              "example": "280323142127",
+              "description": "Unique value as identifier number to differentiate each product"
+            },
+            "price": {
+              "type": "number",
+              "example": 20000,
+              "description": "Price of product"
+            }
+          }
+        },
+        "Insured": {
+          "type": "object",
+          "required": [
+            "type",
+            "details"
+          ],
+          "properties": {
+            "type": {
+              "description": "type of insureds",
+              "type": "string",
+              "example": "USER",
+              "enum": [
+                "USER",
+                "TRAVEL",
+                "EXPERIENCE",
+                "HOSPITALITY",
+                "LOAN",
+                "USER_LENDER",
+                "USER_BORROWER",
+                "GADGET",
+                "SHIPPING",
+                "PACKAGE"
+              ]
+            },
+            "details": {
+              "description": "detail information of insureds",
+              "type": "object",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/InsuredTravel"
+                },
+                {
+                  "$ref": "#/components/schemas/InsuredUser"
+                },
+                {
+                  "$ref": "#/components/schemas/InsuredLoan"
+                },
+                {
+                  "$ref": "#/components/schemas/InsuredGadget"
+                },
+                {
+                  "$ref": "#/components/schemas/InsuredMotor"
+                },
+                {
+                  "$ref": "#/components/schemas/InsuredShipping"
+                },
+                {
+                  "$ref": "#/components/schemas/InsuredPackage"
+                }
+              ]
+            },
+            "documents": {
+              "description": "insured's supporting documents",
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Document"
+              }
+            }
+          }
+        },
+        "DocumentPolicy": {
+          "type": "object",
+          "properties": {
+            "filename": {
+              "description": "name of the file, you can provide the filename include its extention.",
+              "type": "string",
+              "example": "T-FLIGHT-001-20230824-OM94T.pdf"
+            },
+            "type": {
+              "description": "type of document, it is just constant value that categorize of the document.",
+              "type": "string",
+              "examples": [
+                "POLICY_CERTIFICATE",
+                "POLICY_WORDING",
+                "KTP",
+                "ID",
+                "TICKET",
+                "and soon"
+              ]
+            },
+            "url": {
+              "description": "full url to access the document, this is should be public url",
+              "type": "string",
+              "example": "https://api-staging.qoala.app/api/v2/policies/documents/bea04405-97d2-4eb8-b4f6-8db76e6f17ac/files/T-FLIGHT-001-20230824-OM94T.pdf"
+            },
+            "alias": {
+              "description": "document alias",
+              "type": "string",
+              "example": "policy_certificate.pdf"
+            }
+          }
+        },
+        "200detailPolicy": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "success"
+            },
+            "message": {
+              "type": "string",
+              "example": "success get quote policy"
+            },
+            "code": {
+              "type": "number",
+              "example": 200
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "partner_transaction_number": {
+                  "type": "string",
+                  "example": 1234
+                },
+                "quotation_number": {
+                  "type": "string",
+                  "example": "QS-230828-5CL9NB47"
+                },
+                "product_code": {
+                  "type": "string",
+                  "example": "FL-100"
+                },
+                "policies": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "number": {
+                        "type": "string",
+                        "example": "FL-100-1234"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "POLICY_ACTIVE",
+                          "POLICY_ISSUING"
+                        ],
+                        "example": "POLICY_ACTIVE"
+                      },
+                      "start_protection_at": {
+                        "type": "string",
+                        "example": "2023-02-15T00:01:00+07:00"
+                      },
+                      "end_protection_at": {
+                        "type": "string",
+                        "example": "2023-02-15T00:01:00+07:00"
+                      },
+                      "documents": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Document"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "200status": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "success"
+            },
+            "message": {
+              "type": "string",
+              "example": "success get claim"
+            },
+            "code": {
+              "type": "number",
+              "example": 200
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "policy_number": {
+                  "type": "string",
+                  "example": 1234
+                },
+                "claims": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "number": {
+                        "type": "string",
+                        "example": "C-20211213-GIPCA"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "INSURANCE_CLAIM_APPROVE",
+                        "oneOf": [
+                          {
+                            "title": "CLAIM_INITIATE",
+                            "description": "When the claimer successfully submitted a claim"
+                          },
+                          {
+                            "title": "QOALA_CLAIM_APPROVE",
+                            "description": "Qoala approved the claim"
+                          },
+                          {
+                            "title": "QOALA_CLAIM_REJECT",
+                            "description": "Qoala rejected the claim"
+                          },
+                          {
+                            "title": "INSURANCE_CLAIM_APPROVE",
+                            "description": "Insurer approved the claim"
+                          },
+                          {
+                            "title": "INSURANCE_CLAIM_REJECT",
+                            "description": "Insurer rejected the claim"
+                          },
+                          {
+                            "title": "INSURANCE_CLAIM_PAID",
+                            "description": "Claim already paid by insurer"
+                          }
+                        ]
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "example": "2023-10-11 20:00:00",
+                        "format": "date-time"
+                      },
+                      "benefit_code": {
+                        "type": "string",
+                        "example": "BENEFIT_CODE"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "examples": {
+        "createPolicyFlightOneTripNoTransit": {
+          "value": {
+            "product_category": "TRAVEL",
+            "partner_transaction_number": "220120-xx",
+            "product_code": "FL-TVLK-001",
+            "start_protection_at": "2022-02-10T00:00:00+07:00",
+            "purchased_at": "2023-12-11T00:00:00+07:00",
+            "premium": 10000,
+            "booker": {
+              "full_name": "Test booker",
+              "email": "fuad.pratomo@qoala.id",
+              "phone_number": "+6281234567890"
+            },
+            "policy_holder": {
+              "identity_type": "KTP",
+              "identity_number": "1234567890",
+              "full_name": "Test Policy Holder",
+              "email": "fuad.pratomo@qoala.id",
+              "phone_number": "+6281234567890",
+              "birth_date": "1990-01-01",
+              "gender": "MALE",
+              "address": "Pondok Indah, Jakarta"
+            },
+            "insureds": [
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "1234567890",
+                  "full_name": "Test",
+                  "email": "test@gmail.com",
+                  "phone_number": "+6281234567890",
+                  "birth_date": "1990-01-01",
+                  "gender": "MALE",
+                  "address": "Jakarta",
+                  "occupation": "Software Engineer",
+                  "additional_info": {
+                    "passenger_type": "ADULT"
+                  }
+                }
+              },
+              {
+                "type": "TRAVEL",
+                "details": {
+                  "identity_type": "BOOKING_NUMBER",
+                  "identity_number": "BC-0918923910",
+                  "booking_time": "2021-08-30T16:14:25+07:00",
+                  "name": "QG Citilink/ Gajayana 71",
+                  "number": "QG-06",
+                  "departure": "CGK / ML",
+                  "departure_time": "2021-12-21T11:15:00+06:00",
+                  "arrival": "DPS / SLO",
+                  "arrival_time": "2021-12-21T14:17:00+06:00",
+                  "class": "ECONOMY",
+                  "sub_class": "A",
+                  "city_origin": "Jakarta",
+                  "city_destination": "Bali / Denpasar",
+                  "country_origin": "Indonesia",
+                  "country_destination": "Indonesia",
+                  "timezone_origin": "Asia/Jakarta",
+                  "timezone_destination": "Asia/Jakarta",
+                  "total_price_ticket": 1200000,
+                  "sub_total_price_ticket": 1200000,
+                  "trip_type": "SINGLETRIP",
+                  "trip_order": 1
+                }
+              }
+            ]
+          }
+        },
+        "createPolicyFlightOneTripWithTransit": {
+          "value": {
+            "product_category": "TRAVEL",
+            "partner_transaction_number": "220120-xx",
+            "product_code": "FL-TVLK-001",
+            "start_protection_at": "2022-02-10T00:00:00+07:00",
+            "purchased_at": "2023-12-11T00:00:00+07:00",
+            "premium": 10000,
+            "booker": {
+              "full_name": "Test booker",
+              "email": "fuad.pratomo@qoala.id",
+              "phone_number": "+6281234567890"
+            },
+            "policy_holder": {
+              "identity_type": "KTP",
+              "identity_number": "1234567890",
+              "full_name": "Test Policy Holder",
+              "email": "fuad.pratomo@qoala.id",
+              "phone_number": "+6281234567890",
+              "birth_date": "1990-01-01",
+              "gender": "MALE",
+              "address": "Pondok Indah, Jakarta",
+              "occupation": ""
+            },
+            "insureds": [
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "1234567890",
+                  "full_name": "Test",
+                  "email": "test@gmail.com",
+                  "phone_number": "+6281234567890",
+                  "birth_date": "1990-01-01",
+                  "gender": "MALE",
+                  "address": "Jakarta",
+                  "occupation": "Software Engineer",
+                  "additional_info": {
+                    "passenger_type": "ADULT/CHILD/INFANT"
+                  }
+                }
+              },
+              {
+                "type": "TRAVEL",
+                "details": {
+                  "identity_type": "BOOKING_NUMBER",
+                  "identity_number": "BC-0918923910",
+                  "booking_time": "2021-08-30T16:14:25+07:00",
+                  "name": "QG Citilink/ Gajayana 71",
+                  "number": "QG-06",
+                  "departure": "CGK / ML",
+                  "departure_time": "2021-12-21T11:15:00+06:00",
+                  "arrival": "DPS / SLO",
+                  "arrival_time": "2021-12-21T14:17:00+06:00",
+                  "class": "ECONOMY",
+                  "sub_class": "A",
+                  "city_origin": "Jakarta",
+                  "city_destination": "Bali / Denpasar",
+                  "country_origin": "Indonesia",
+                  "country_destination": "Indonesia",
+                  "timezone_origin": "Asia/Jakarta",
+                  "timezone_destination": "Asia/Jakarta",
+                  "total_price_ticket": 1200000,
+                  "sub_total_price_ticket": 1200000,
+                  "trip_type": "SINGLETRIP",
+                  "trip_order": 1
+                }
+              },
+              {
+                "type": "TRAVEL",
+                "details": {
+                  "identity_type": "BOOKING_NUMBER",
+                  "identity_number": "BC-0918923910",
+                  "booking_time": "2021-08-30T16:14:25+07:00",
+                  "name": "QG Citilink/ Gajayana 71",
+                  "number": "QG-06",
+                  "departure": "CGK / ML",
+                  "departure_time": "2021-12-21T11:15:00+06:00",
+                  "arrival": "DPS / SLO",
+                  "arrival_time": "2021-12-21T14:17:00+06:00",
+                  "class": "ECONOMY",
+                  "sub_class": "A",
+                  "city_origin": "Jakarta",
+                  "city_destination": "Bali / Denpasar",
+                  "country_origin": "Indonesia",
+                  "country_destination": "Indonesia",
+                  "timezone_origin": "Asia/Jakarta",
+                  "timezone_destination": "Asia/Jakarta",
+                  "total_price_ticket": 1200000,
+                  "sub_total_price_ticket": 1200000,
+                  "trip_type": "SINGLETRIP",
+                  "trip_order": 2
+                }
+              }
+            ]
+          }
+        },
+        "createPolicyFlightRoundTripNoTransit2PoliciesA": {
+          "value": {
+            "product_category": "TRAVEL",
+            "partner_transaction_number": "220120-xx",
+            "product_code": "FL-TVLK-001",
+            "start_protection_at": "2022-02-10T00:00:00+07:00",
+            "purchased_at": "2023-12-11T00:00:00+07:00",
+            "premium": 10000,
+            "booker": {
+              "full_name": "Test booker",
+              "email": "fuad.pratomo@qoala.id",
+              "phone_number": "+6281234567890"
+            },
+            "policy_holder": {
+              "identity_type": "KTP",
+              "identity_number": "1234567890",
+              "full_name": "Test Policy Holder",
+              "email": "fuad.pratomo@qoala.id",
+              "phone_number": "+6281234567890",
+              "birth_date": "1990-01-01",
+              "gender": "MALE",
+              "address": "Pondok Indah, Jakarta"
+            },
+            "insureds": [
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "1234567890",
+                  "full_name": "Test",
+                  "email": "test@gmail.com",
+                  "phone_number": "+6281234567890",
+                  "birth_date": "1990-01-01",
+                  "gender": "MALE",
+                  "address": "Jakarta",
+                  "occupation": "Software Engineer",
+                  "additional_info": {
+                    "passenger_type": "ADULT"
+                  }
+                }
+              },
+              {
+                "type": "TRAVEL",
+                "details": {
+                  "identity_type": "BOOKING_NUMBER",
+                  "identity_number": "BC-0918923910",
+                  "booking_time": "2021-08-30T16:14:25+07:00",
+                  "name": "QG Citilink/ Gajayana 71",
+                  "number": "QG-06",
+                  "departure": "CGK / ML",
+                  "departure_time": "2021-12-21T11:15:00+06:00",
+                  "arrival": "DPS / SLO",
+                  "arrival_time": "2021-12-21T14:17:00+06:00",
+                  "class": "ECONOMY",
+                  "sub_class": "A",
+                  "city_origin": "Jakarta",
+                  "city_destination": "Bali / Denpasar",
+                  "country_origin": "Indonesia",
+                  "country_destination": "Indonesia",
+                  "timezone_origin": "Asia/Jakarta",
+                  "timezone_destination": "Asia/Jakarta",
+                  "total_price_ticket": 1100000,
+                  "sub_total_price_ticket": 600000,
+                  "additional_info": {},
+                  "trip_type": "ROUNDTRIP-1",
+                  "trip_order": 1
+                }
+              }
+            ]
+          }
+        },
+        "createPolicyFlightRoundTripNoTransit2PoliciesB": {
+          "value": {
+            "product_category": "TRAVEL",
+            "partner_transaction_number": "220120-xx",
+            "product_code": "FL-TVLK-001",
+            "start_protection_at": "2022-02-10T00:00:00+07:00",
+            "purchased_at": "2023-12-11T00:00:00+07:00",
+            "premium": 10000,
+            "booker": {
+              "full_name": "Test booker",
+              "email": "fuad.pratomo@qoala.id",
+              "phone_number": "+6281234567890"
+            },
+            "policy_holder": {
+              "identity_type": "KTP",
+              "identity_number": "1234567890",
+              "full_name": "Test Policy Holder",
+              "email": "fuad.pratomo@qoala.id",
+              "phone_number": "+6281234567890",
+              "birth_date": "1990-01-01",
+              "gender": "MALE",
+              "address": "Pondok Indah, Jakarta",
+              "occupation": ""
+            },
+            "insureds": [
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "1234567890",
+                  "full_name": "Test",
+                  "email": "test@gmail.com",
+                  "phone_number": "+6281234567890",
+                  "birth_date": "1990-01-01",
+                  "gender": "MALE",
+                  "address": "Jakarta",
+                  "occupation": "Software Engineer",
+                  "additional_info": {
+                    "passenger_type": "ADULT/CHILD/INFANT"
+                  }
+                }
+              },
+              {
+                "type": "TRAVEL",
+                "details": {
+                  "identity_type": "BOOKING_NUMBER",
+                  "identity_number": "BC-0918923910",
+                  "booking_time": "2021-08-30T16:14:25+07:00",
+                  "name": "QG Citilink/ Gajayana 71",
+                  "number": "QG-06",
+                  "departure": "CGK / ML",
+                  "departure_time": "2021-12-21T11:15:00+06:00",
+                  "arrival": "DPS / SLO",
+                  "arrival_time": "2021-12-21T14:17:00+06:00",
+                  "class": "ECONOMY",
+                  "sub_class": "A",
+                  "city_origin": "Jakarta",
+                  "city_destination": "Bali / Denpasar",
+                  "country_origin": "Indonesia",
+                  "country_destination": "Indonesia",
+                  "timezone_origin": "Asia/Jakarta",
+                  "timezone_destination": "Asia/Jakarta",
+                  "total_price_ticket": 1100000,
+                  "sub_total_price_ticket": 500000,
+                  "additional_info": {},
+                  "trip_type": "ROUNDTRIP-2",
+                  "trip_order": 1
+                }
+              }
+            ]
+          }
+        },
+        "createPolicyFlightRoundTripNoTransit1Policy": {
+          "value": {
+            "product_category": "TRAVEL",
+            "partner_transaction_number": "220120-xx",
+            "product_code": "FL-TVLK-001",
+            "start_protection_at": "2022-02-10T00:00:00+07:00",
+            "purchased_at": "2023-12-11T00:00:00+07:00",
+            "premium": 10000,
+            "booker": {
+              "full_name": "Test booker",
+              "email": "fuad.pratomo@qoala.id",
+              "phone_number": "+6281234567890"
+            },
+            "policy_holder": {
+              "identity_type": "KTP",
+              "identity_number": "1234567890",
+              "full_name": "Test Policy Holder",
+              "email": "fuad.pratomo@qoala.id",
+              "phone_number": "+6281234567890",
+              "birth_date": "1990-01-01",
+              "gender": "MALE",
+              "address": "Pondok Indah, Jakarta",
+              "occupation": ""
+            },
+            "insureds": [
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "1234567890",
+                  "full_name": "Test",
+                  "email": "test@gmail.com",
+                  "phone_number": "+6281234567890",
+                  "birth_date": "1990-01-01",
+                  "gender": "MALE",
+                  "address": "Jakarta",
+                  "occupation": "Software Engineer",
+                  "additional_info": {
+                    "passenger_type": "ADULT/CHILD/INFANT"
+                  }
+                }
+              },
+              {
+                "type": "TRAVEL",
+                "details": {
+                  "identity_type": "BOOKING_NUMBER",
+                  "identity_number": "BC-0918923910",
+                  "booking_time": "2021-08-30T16:14:25+07:00",
+                  "name": "QG Citilink/ Gajayana 71",
+                  "number": "QG-06",
+                  "departure": "CGK / ML",
+                  "departure_time": "2021-12-21T11:15:00+06:00",
+                  "arrival": "DPS / SLO",
+                  "arrival_time": "2021-12-21T14:17:00+06:00",
+                  "class": "ECONOMY",
+                  "sub_class": "A",
+                  "city_origin": "Jakarta",
+                  "city_destination": "Bali / Denpasar",
+                  "country_origin": "Indonesia",
+                  "country_destination": "Indonesia",
+                  "timezone_origin": "Asia/Jakarta",
+                  "timezone_destination": "Asia/Jakarta",
+                  "total_price_ticket": 1100000,
+                  "sub_total_price_ticket": 600000,
+                  "additional_info": {},
+                  "trip_type": "ROUNDTRIP-1",
+                  "trip_order": 1
+                }
+              },
+              {
+                "type": "TRAVEL",
+                "details": {
+                  "identity_type": "BOOKING_NUMBER",
+                  "identity_number": "BC-0918923910",
+                  "booking_time": "2021-08-30T16:14:25+07:00",
+                  "name": "QG Citilink/ Gajayana 71",
+                  "number": "QG-06",
+                  "departure": "CGK / ML",
+                  "departure_time": "2021-12-21T11:15:00+06:00",
+                  "arrival": "DPS / SLO",
+                  "arrival_time": "2021-12-21T14:17:00+06:00",
+                  "class": "ECONOMY",
+                  "sub_class": "A",
+                  "city_origin": "Bali / Denpasar",
+                  "city_destination": "Jakarta",
+                  "country_origin": "Indonesia",
+                  "country_destination": "Indonesia",
+                  "timezone_origin": "Asia/Jakarta",
+                  "timezone_destination": "Asia/Jakarta",
+                  "total_price_ticket": 1100000,
+                  "sub_total_price_ticket": 500000,
+                  "additional_info": {},
+                  "trip_type": "ROUNDTRIP-2",
+                  "trip_order": 1
+                }
+              }
+            ]
+          }
+        },
+        "createPolicyFlightRoundTripWithTransit1Policy": {
+          "value": {
+            "product_category": "TRAVEL",
+            "partner_transaction_number": "220120-xx",
+            "product_code": "FL-TVLK-001",
+            "start_protection_at": "2022-02-10T00:00:00+07:00",
+            "purchased_at": "2023-12-11T00:00:00+07:00",
+            "premium": 10000,
+            "booker": {
+              "full_name": "Test booker",
+              "email": "fuad.pratomo@qoala.id",
+              "phone_number": "+6281234567890"
+            },
+            "policy_holder": {
+              "identity_type": "KTP",
+              "identity_number": "1234567890",
+              "full_name": "Test Policy Holder",
+              "email": "fuad.pratomo@qoala.id",
+              "phone_number": "+6281234567890",
+              "birth_date": "1990-01-01",
+              "gender": "MALE",
+              "address": "Pondok Indah, Jakarta",
+              "occupation": ""
+            },
+            "insureds": [
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "1234567890",
+                  "full_name": "Test",
+                  "email": "test@gmail.com",
+                  "phone_number": "+6281234567890",
+                  "birth_date": "1990-01-01",
+                  "gender": "MALE",
+                  "address": "Jakarta",
+                  "occupation": "Software Engineer",
+                  "additional_info": {
+                    "passenger_type": "ADULT/CHILD/INFANT"
+                  }
+                }
+              },
+              {
+                "type": "TRAVEL",
+                "details": {
+                  "identity_type": "BOOKING_NUMBER",
+                  "identity_number": "BC-0918923910",
+                  "booking_time": "2021-08-30T16:14:25+07:00",
+                  "name": "QG Citilink/ Gajayana 71",
+                  "number": "QG-06",
+                  "departure": "CGK / ML",
+                  "departure_time": "2021-12-21T11:15:00+06:00",
+                  "arrival": "DPS / SLO",
+                  "arrival_time": "2021-12-21T14:17:00+06:00",
+                  "class": "ECONOMY",
+                  "sub_class": "A",
+                  "city_origin": "Jakarta",
+                  "city_destination": "Bali / Denpasar",
+                  "country_origin": "Indonesia",
+                  "country_destination": "Indonesia",
+                  "timezone_origin": "Asia/Jakarta",
+                  "timezone_destination": "Asia/Jakarta",
+                  "total_price_ticket": 1100000,
+                  "sub_total_price_ticket": 600000,
+                  "additional_info": {},
+                  "trip_type": "ROUNDTRIP-1",
+                  "trip_order": 1
+                }
+              },
+              {
+                "type": "TRAVEL",
+                "details": {
+                  "identity_type": "BOOKING_NUMBER",
+                  "identity_number": "BC-0918923910",
+                  "booking_time": "2021-08-30T16:14:25+07:00",
+                  "name": "QG Citilink/ Gajayana 71",
+                  "number": "QG-06",
+                  "departure": "CGK / ML",
+                  "departure_time": "2021-12-21T11:15:00+06:00",
+                  "arrival": "DPS / SLO",
+                  "arrival_time": "2021-12-21T14:17:00+06:00",
+                  "class": "ECONOMY",
+                  "sub_class": "A",
+                  "city_origin": "Bali / Denpasar",
+                  "city_destination": "Makassar",
+                  "country_origin": "Indonesia",
+                  "country_destination": "Indonesia",
+                  "timezone_origin": "Asia/Jakarta",
+                  "timezone_destination": "Asia/Jakarta",
+                  "total_price_ticket": 1100000,
+                  "sub_total_price_ticket": 600000,
+                  "additional_info": {},
+                  "trip_type": "ROUNDTRIP-1",
+                  "trip_order": 2
+                }
+              },
+              {
+                "type": "TRAVEL",
+                "details": {
+                  "identity_type": "BOOKING_NUMBER",
+                  "identity_number": "BC-0918923910",
+                  "booking_time": "2021-08-30T16:14:25+07:00",
+                  "name": "QG Citilink/ Gajayana 71",
+                  "number": "QG-06",
+                  "departure": "CGK / ML",
+                  "departure_time": "2021-12-21T11:15:00+06:00",
+                  "arrival": "DPS / SLO",
+                  "arrival_time": "2021-12-21T14:17:00+06:00",
+                  "class": "ECONOMY",
+                  "sub_class": "A",
+                  "city_origin": "Makassar",
+                  "city_destination": "Jakarta",
+                  "country_origin": "Indonesia",
+                  "country_destination": "Indonesia",
+                  "timezone_origin": "Asia/Makassar",
+                  "timezone_destination": "Asia/Jakarta",
+                  "total_price_ticket": 1100000,
+                  "sub_total_price_ticket": 500000,
+                  "additional_info": {},
+                  "trip_type": "ROUNDTRIP-2",
+                  "trip_order": 1
+                }
+              }
+            ]
+          }
+        },
+        "createPolicyTrain": {
+          "value": {
+            "product_category": "TRAVEL",
+            "partner_transaction_number": "123456",
+            "product_code": "T-TRIN-TVLK-001",
+            "premium": 12500,
+            "start_protection_at": "2023-11-02T06:14:32Z",
+            "end_protection_at": "2023-11-08T05:40:00Z",
+            "purchased_at": "2023-11-02T06:14:32Z",
+            "partner_product_price": 450000,
+            "booker": {
+              "full_name": "Kwee Tommy",
+              "email": "kwee@gmail.com",
+              "phone_number": "+628767890000"
+            },
+            "policy_holder": {
+              "full_name": "Kwee Tommy",
+              "email": "kwee@gmail.com",
+              "phone_number": "+628767890000",
+              "identity_type": "KTP",
+              "identity_number": "1234567890",
+              "birth_date": "1989-09-09",
+              "gender": "MALE",
+              "address": "Jakarta",
+              "occupation": "Product Manager"
+            },
+            "insureds": [
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "3213051409950401",
+                  "full_name": "Kwee Tommy",
+                  "email": "kwee@gmail.com",
+                  "phone_number": "628767890000",
+                  "birth_date": "1989-09-09",
+                  "gender": "MALE",
+                  "address": "Jakarta",
+                  "occupation": "Product Manager",
+                  "additional_info": {
+                    "passenger_type": "ADULT"
+                  }
+                }
+              },
+              {
+                "type": "TRAVEL",
+                "details": {
+                  "identity_type": "BOOKING_NUMBER",
+                  "identity_number": "1082873892",
+                  "booking_time": "2023-11-02T06:14:32Z",
+                  "name": "Airlangga236",
+                  "number": "236",
+                  "departure": "PSE",
+                  "departure_time": "2023-11-08T11:20:00+07:00",
+                  "arrival": "CKP",
+                  "arrival_time": "2023-11-08T12:40:00+07:00",
+                  "sub_class": "C",
+                  "city_origin": "Jakarta",
+                  "city_destination": "Cikampek",
+                  "country_origin": "indonesia",
+                  "country_destination": "indonesia",
+                  "timezone_origin": "",
+                  "timezone_destination": "",
+                  "total_price_ticket": 49000,
+                  "sub_total_price_ticket": 49000,
+                  "trip_type": "SINGLETRIP",
+                  "trip_order": 1,
+                  "class": "Economy"
+                }
+              }
+            ]
+          }
+        },
+        "createPolicyExperienceEvent": {
+          "value": {
+            "product_category": "TRAVEL",
+            "partner_transaction_number": "967065678",
+            "product_code": "T-EXPR-789",
+            "premium": 97000,
+            "partner_product_price": 57808,
+            "start_protection_at": "2023-09-08T03:37:40Z",
+            "end_protection_at": "2023-09-11T23:59:59+07:00",
+            "purchased_at": "2023-09-08T03:37:40Z",
+            "booker": {
+              "full_name": "AyuDevina",
+              "email": "ayu30@qoala.com",
+              "phone_number": "+6282233605567"
+            },
+            "policy_holder": {
+              "full_name": "AyuDevina",
+              "email": "ayu30@qoala.com",
+              "phone_number": "+6282233605567",
+              "identity_type": "KTP",
+              "identity_number": "45678909876543",
+              "birth_date": "",
+              "gender": "FEMALE",
+              "address": "",
+              "occupation": ""
+            },
+            "insureds": [
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "45678909876543",
+                  "full_name": "AyuDevina",
+                  "email": "ayu30@qoala.com",
+                  "phone_number": "+6282233605675",
+                  "birth_date": "",
+                  "gender": "FEMALE",
+                  "address": "",
+                  "occupation": ""
+                }
+              },
+              {
+                "type": "EXPERIENCE",
+                "details": {
+                  "identity_type": "BOOKING_NUMBER",
+                  "identity_number": "1067530163",
+                  "booking_time": "2023-09-08T03:37:40Z",
+                  "name": "S.E.A.Aquarium",
+                  "departure_time": "2023-09-12T00:00:00+07:00",
+                  "arrival_time": "2023-09-12T23:59:59+07:00",
+                  "sub_class": "",
+                  "city_origin": "",
+                  "country_origin": "",
+                  "timezone_origin": "Asia/Jakarta",
+                  "timezone_destination": "Asia/Jakarta",
+                  "total_price_ticket": 965862,
+                  "sub_total_price_ticket": 965862
+                }
+              }
+            ]
+          }
+        },
+        "createPolicyBus": {
+          "value": {
+            "product_category": "TRAVEL",
+            "partner_transaction_number": "1067652488.1",
+            "product_code": "T-TBUS-001",
+            "premium": 8600,
+            "partner_product_price": 45000,
+            "booker": {
+              "full_name": "PTGlobalVisual",
+              "email": "ga1@google.com",
+              "phone_number": "+6281297268456"
+            },
+            "policy_holder": {
+              "full_name": "PTGlobalVisual",
+              "email": "ga1@google.com",
+              "phone_number": "+6281297268456",
+              "identity_type": "KTP",
+              "identity_number": "45678908654765432",
+              "birth_date": "",
+              "gender": "MALE",
+              "address": "Medan",
+              "occupation": ""
+            },
+            "insureds": [
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "345678907654345678",
+                  "full_name": "DaniSuryadi",
+                  "email": "dd@gmail.com",
+                  "phone_number": "",
+                  "birth_date": "",
+                  "gender": "MALE",
+                  "address": "",
+                  "occupation": "",
+                  "additional_info": {
+                    "passenger_type": "ADULT"
+                  }
+                }
+              },
+              {
+                "type": "TRAVEL",
+                "details": {
+                  "identity_type": "BOOKING_NUMBER",
+                  "identity_number": "1067652488",
+                  "booking_time": "2023-09-08T10:20:53Z",
+                  "name": "PTBhinnekaSangkuriangTransportShuttle",
+                  "number": "BUS-01",
+                  "departure": "p5696",
+                  "departure_time": "2023-09-11T12:15:00+07:00",
+                  "arrival": "p1247",
+                  "arrival_time": "2023-09-11T15:30:00+07:00",
+                  "sub_class": "",
+                  "city_origin": "Bandung",
+                  "city_destination": "Jakarta",
+                  "country_origin": "Indonesia",
+                  "country_destination": "Indonesia",
+                  "timezone_origin": "",
+                  "timezone_destination": "",
+                  "total_price_ticket": 105000,
+                  "sub_total_price_ticket": 105000,
+                  "trip_type": "ROUNDTRIP-1",
+                  "trip_order": 1,
+                  "class": "AWAY"
+                }
+              }
+            ],
+            "start_protection_at": "2023-09-08T10:49:29Z",
+            "end_protection_at": "2023-09-11T15:30:00+07:00",
+            "purchased_at": "2023-09-08T10:49:29Z"
+          }
+        },
+        "createPolicyHotel": {
+          "value": {
+            "product_category": "TRAVEL",
+            "partner_transaction_number": "1067668638",
+            "product_code": "T-HTEL-001",
+            "premium": 13000,
+            "booker": {
+              "full_name": "TalithaSS",
+              "email": "thalitasss@gmail.com",
+              "phone_number": "+62822931725678"
+            },
+            "policy_holder": {
+              "identity_type": "KTP",
+              "identity_number": "3456789098765",
+              "full_name": "TalithaShafaSyakirah",
+              "email": "thalitasss@gmail.com",
+              "phone_number": "+62822931725678",
+              "birth_date": "",
+              "gender": "FEMALE",
+              "address": "Depok",
+              "occupation": ""
+            },
+            "insureds": [
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "3456789076543",
+                  "full_name": "TalithaSS",
+                  "email": "thalitasss@gmail.com",
+                  "phone_number": "+62822931725678",
+                  "birth_date": "",
+                  "gender": "FEMALE",
+                  "address": "Jakarta",
+                  "occupation": "",
+                  "additional_info": {
+                    "passenger_type": "ADULT"
+                  }
+                }
+              },
+              {
+                "type": "HOSPITALITY",
+                "details": {
+                  "identity_type": "BOOKING_NUMBER",
+                  "identity_number": "1067668638",
+                  "booking_time": "2023-09-08T11:21:01Z",
+                  "name": "TheKingstonInnMalioboro",
+                  "number": "",
+                  "departure": "",
+                  "departure_time": "2023-09-08T14:00:00+07:00",
+                  "arrival": "",
+                  "arrival_time": "2023-09-09T12:00:00+07:00",
+                  "sub_class": "",
+                  "city_origin": "Yogyakarta",
+                  "city_destination": "Yogyakarta",
+                  "country_origin": "Indonesia",
+                  "country_destination": "Indonesia",
+                  "timezone_origin": "",
+                  "timezone_destination": "",
+                  "total_price_ticket": 281199,
+                  "number_of_room": 1,
+                  "class": ""
+                }
+              }
+            ],
+            "start_protection_at": "2023-09-08T11:21:01Z",
+            "end_protection_at": "2023-09-09T12:00:00+07:00",
+            "purchased_at": "2023-09-08T11:21:01Z"
+          }
+        },
+        "createPolicyGadgetWithActivation": {
+          "value": {
+            "product_category": "GADGET",
+            "partner_transaction_number": "VIETTELPAY-20230415-1393561",
+            "product_code": "G-SC30-VTPY-001",
+            "start_protection_at": "2023-04-16T00:00:00+07:00",
+            "purchased_at": "2023-04-15T23:26:08+07:00",
+            "booker": {
+              "full_name": "NÔNG KIM THÀNH",
+              "email": "KH_VDS@gmail.com",
+              "phone_number": "2345678908765"
+            },
+            "policy_holder": {
+              "identity_type": "NATIONAL_ID",
+              "identity_number": "010197006841",
+              "full_name": "NÔNG KIM THÀNH",
+              "email": "KH_VDS@gmail.com",
+              "phone_number": "2345678908765",
+              "birth_date": "1997-10-10",
+              "gender": "FEMALE",
+              "address": "Cáng 1 Hợp Thành Lào Cai Lào Cai",
+              "occupation": ""
+            }
+          }
+        },
+        "createPolicyGadgetWithoutActivation": {
+          "value": {
+            "product_category": "GADGET",
+            "partner_transaction_number": "231003-KT1",
+            "product_code": "G-GTLO-JULO-002Test",
+            "start_protection_at": "2023-10-03T00:00:00+07:00",
+            "purchased_at": "2023-10-03T00:00:00+07:00",
+            "booker": {
+              "full_name": "Kwee",
+              "email": "kwee@qoala.id",
+              "phone_number": "+6281234567890"
+            },
+            "policy_holder": {
+              "identity_type": "KTP",
+              "identity_number": "1234567890",
+              "full_name": "Kwee",
+              "email": "Kwee@qoala.id",
+              "phone_number": "+6287886131900",
+              "birth_date": "1990-01-01",
+              "gender": "MALE",
+              "address": "Jakarta",
+              "occupation": "Product Manager"
+            },
+            "insureds": [
+              {
+                "type": "GADGET",
+                "details": {
+                  "identity_type": "IMEI",
+                  "identity_number": "IMEITES2T0231003-001",
+                  "manufacturer": "Apple",
+                  "sum_insured": 1000,
+                  "brand": "Apple",
+                  "series": "A2643",
+                  "model": "Iphone 13 Pro Max",
+                  "device_category": "SMARTPHONE",
+                  "covered_type_unit": "MONTH",
+                  "covered_type_max": 1
+                }
+              }
+            ]
+          }
+        },
+        "createPolicyCreditInsuranceReinstatement": {
+          "value": {
+            "product_category": "FINANCE",
+            "partner_transaction_number": "PARTNER_TRANSACTION_NUMBER",
+            "product_code": "PRODUCT_CODE",
+            "start_protection_at": "2022-12-20T00:00:00+07:00",
+            "purchased_at": "2023-12-11T00:00:00+07:00",
+            "policy_holder": {
+              "identity_type": "KTP",
+              "identity_number": "1234567890",
+              "full_name": "PT BUMI PERKASA",
+              "email": "policyholderemail@qoala.id",
+              "phone_number": "+6281234567890",
+              "birth_date": "1990-01-01",
+              "gender": "MALE"
+            },
+            "insureds": [
+              {
+                "type": "LOAN",
+                "details": {
+                  "identity_type": "LOAN_NUMBER",
+                  "identity_number": "LOAN-NUMBER123456",
+                  "loan_amount": 100000000,
+                  "tenure_value": 90,
+                  "tenure_period": "DAYS",
+                  "interest_rate": 9.4,
+                  "interest_period": "YEAR"
+                }
+              },
+              {
+                "type": "USER_LENDER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "1234567890",
+                  "full_name": "PT BUMI PERKASA",
+                  "email": "lenderemail@qoala.id",
+                  "phone_number": "+6281234567890",
+                  "birth_date": "1990-01-01",
+                  "gender": "MALE"
+                }
+              },
+              {
+                "type": "USER_BORROWER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "1234",
+                  "full_name": "PT MAJU MUNDUR",
+                  "email": "borroweremail@qoala.id",
+                  "phone_number": "+6281234567890",
+                  "birth_date": "1990-01-01",
+                  "gender": "MALE"
+                }
+              }
+            ]
+          }
+        },
+        "createPolicyCreditLifeInsurance": {
+          "value": {
+            "product_category": "MICROHEALTH",
+            "partner_transaction_number": "PARTNER_TRANSACTION_NUMBER",
+            "product_code": "PRODUCT_CODE",
+            "start_protection_at": "2022-12-20T00:00:00+07:00",
+            "end_protection_at": "2023-12-20T00:00:00+07:00",
+            "purchased_at": "2023-12-11T00:00:00+07:00",
+            "booker": {
+              "full_name": "Booker full name",
+              "email": "booker.email@qoala.id",
+              "phone_number": "628123456789"
+            },
+            "policy_holder": {
+              "identity_type": "KTP",
+              "identity_number": "1234567890",
+              "full_name": "PT BUMI PERKASA",
+              "email": "policyholderemail@qoala.id",
+              "phone_number": "+6281234567890",
+              "birth_date": "1990-01-01",
+              "gender": "MALE"
+            },
+            "insureds": [
+              {
+                "type": "LOAN",
+                "details": {
+                  "identity_type": "LOAN_NUMBER",
+                  "identity_number": "LOAN-NUMBER123456",
+                  "loan_amount": 100000000,
+                  "tenure_value": 90,
+                  "tenure_period": "DAYS",
+                  "interest_rate": 9.4,
+                  "interest_period": "YEAR"
+                }
+              },
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "1234567890",
+                  "full_name": "UserInsuredFullName",
+                  "email": "UserInsuredEmail@qoala.id",
+                  "phone_number": "+6281234567890",
+                  "birth_date": "1990-01-01",
+                  "gender": "MALE",
+                  "occupation": "Pebisnis",
+                  "address": "Pondok Indah",
+                  "relationship": "SINGLE"
+                }
+              }
+            ]
+          }
+        },
+        "personalAccidentMicrohealth": {
+          "value": {
+            "product_category": "MICROHEALTH",
+            "partner_transaction_number": "PARTNER_TRANSACTION_NUMBER",
+            "product_code": "PRODUCT_CODE",
+            "start_protection_at": "2022-12-20T00:00:00+07:00",
+            "purchased_at": "2023-12-11T00:00:00+07:00",
+            "booker": {
+              "full_name": "Booker full name",
+              "email": "booker.email@qoala.id",
+              "phone_number": "628123456789"
+            },
+            "policy_holder": {
+              "identity_type": "KTP",
+              "identity_number": "1234567890",
+              "full_name": "PT BUMI PERKASA",
+              "email": "policyholderemail@qoala.id",
+              "phone_number": "+6281234567890",
+              "birth_date": "1990-01-01",
+              "gender": "MALE"
+            },
+            "insureds": [
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "1234567890",
+                  "full_name": "UserInsuredFullName",
+                  "email": "UserInsuredEmail@qoala.id",
+                  "phone_number": "+6281234567890",
+                  "birth_date": "1990-01-01",
+                  "gender": "MALE",
+                  "occupation": "Pebisnis",
+                  "address": "Pondok Indah",
+                  "relationship": "SINGLE",
+                  "location": "location detail"
+                }
+              }
+            ]
+          }
+        },
+        "createPolicyShipping": {
+          "value": {
+            "product_category": "LOGISTIC",
+            "partner_transaction_number": "1067652488.1",
+            "product_code": "L-SHIP-001",
+            "premium": 8600,
+            "start_protection_at": "2023-09-08T10:49:29Z",
+            "end_protection_at": "2023-09-11T15:30:00+07:00",
+            "purchased_at": "2023-09-08T10:49:29Z",
+            "policy_holder": {
+              "full_name": "Samsul Setiadi",
+              "email": "samsul1234@gmail.com",
+              "phone_number": "+6281297268456",
+              "identity_type": "KTP",
+              "identity_number": "45678908654765432",
+              "gender": "MALE",
+              "address": "Medan"
+            },
+            "insureds": [
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "345678907654345678",
+                  "full_name": "Dodi Suryadi",
+                  "email": "dodi890@gmail.com",
+                  "phone_number": "08578789897",
+                  "birth_date": "15-11-2002",
+                  "gender": "MALE",
+                  "address": "Jl Gatot Kayu No 11, Kel. Karet, Kec. Setiabudi, Kota Jakarta Selatan, DKI Jakarta",
+                  "occupation": "Software Engineer",
+                  "additional_info": {
+                    "city": "Jakarta",
+                    "country": "Indonesia",
+                    "zipcode": "14044",
+                    "subject": "SENDER"
+                  }
+                }
+              },
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "345678907654345678",
+                  "full_name": "Dani Suryadi",
+                  "email": "dani12344@gmail.com",
+                  "phone_number": "08578789897",
+                  "birth_date": "14-11-2001",
+                  "gender": "MALE",
+                  "address": "Jl Gatot Kaca No 11, Kel. Cilincing, Kec. Bogor, Kab. Bogor, Jawa Barat",
+                  "occupation": "Software Engineer",
+                  "additional_info": {
+                    "city": "Jakarta",
+                    "country": "Indonesia",
+                    "zipcode": "14044",
+                    "subject": "RECIPIENT"
+                  }
+                }
+              },
+              {
+                "type": "SHIPPING",
+                "details": {
+                  "carrier": "LIONPARCEL",
+                  "identity_type": "TRACKING_NUMBER",
+                  "identity_number": "1067652488",
+                  "service": "Next Day",
+                  "cost": 23000,
+                  "total_package_price": 500000,
+                  "estimated_delivery_time": "2023-02-15T10:00:00Z"
+                }
+              },
+              {
+                "type": "PACKAGE",
+                "details": {
+                  "name": "TV LED Samsung 24 inch",
+                  "identity_type": "BARCODE_NUMBER",
+                  "identity_number": "1067652488",
+                  "price": 2000000
+                }
+              },
+              {
+                "type": "PACKAGE",
+                "details": {
+                  "name": "TV LED Xiaomi 64 inch",
+                  "identity_type": "BARCODE_NUMBER",
+                  "identity_number": "345678",
+                  "price": 3000000
+                }
+              }
+            ]
+          }
+        },
+        "createClaimTravelProduct": {
+          "value": {
+            "currency_code": "IDR",
+            "country_code": "ID",
+            "user_channel": "PARTNERSHIP",
+            "partner_code": "ABC",
+            "partner_claim_id": "C12345",
+            "policy_number": "F-CRDC-001-20230802",
+            "product": [
+              {
+                "category": "CATEGORY_CODE",
+                "code": "PA-123",
+                "benefit_code": "BENEFIT_CODE"
+              }
+            ],
+            "claimant_data": [
+              {
+                "full_name": "string",
+                "phone_number": "string"
+              }
+            ],
+            "form_data": [
+              {
+                "name": "Alamat",
+                "value": "85778"
+              }
+            ],
+            "covered_data": [
+              {
+                "type": "USER",
+                "details": {
+                  "identity_type": "KTP",
+                  "identity_number": "1234567890",
+                  "full_name": "Test",
+                  "email": "test@gmail.com",
+                  "phone_number": "+6281234567890",
+                  "birth_date": "1990-01-01",
+                  "gender": "MALE",
+                  "address": "Jakarta",
+                  "occupation": "Software Engineer",
+                  "additional_info": {
+                    "passenger_type": "ADULT"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "createClaimCreditInsuranceWithReinstatement": {
+          "value": {
+            "user_channel": "PARTNERSHIP",
+            "policy_number": "QOALA_POLICY_NUMBER",
+            "partner_code": "PARTNER_CODE",
+            "currency_code": "IDR",
+            "total_amount": 200000,
+            "country_code": "ID",
+            "product": [
+              {
+                "category": "CATEGORY_CODE",
+                "code": "PRODUCT_CODE",
+                "benefit_code": "BENEFIT_CODE"
+              }
+            ],
+            "claim_additional_info": [
+              {
+                "loan_id": "LOAN_ID",
+                "borrower_name": "BORROWERNAME",
+                "beneficiary_name": "BENEFICIARY_NAME",
+                "last_payment_date": "2023-05-14T00:00:00.000Z",
+                "last_collection_date": "2023-05-14T00:00:00.000Z",
+                "outstanding_amount": 200000
+              }
+            ]
+          }
+        }
+      },
+      "responses": {
+        "200createQuotation": {
+          "description": "Success",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "description": "status of response, it will contain success",
+                    "example": "success"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "short message explains about the success response",
+                    "example": "success get quote policy"
+                  },
+                  "code": {
+                    "type": "number",
+                    "description": "http code response",
+                    "example": 200
+                  },
+                  "data": {
+                    "type": "object",
+                    "description": "showing data response",
+                    "properties": {
+                      "partner_transaction_number": {
+                        "type": "string",
+                        "description": "The transaction ID serves as a unique identifier for each transaction initiated through the API. Partners are responsible for generating this ID and ensuring its uniqueness across their transactions.",
+                        "example": 1234
+                      },
+                      "transaction_number": {
+                        "type": "string",
+                        "description": "Unique transaction number generated in qoala system",
+                        "example": 1234
+                      },
+                      "product_code": {
+                        "type": "string",
+                        "description": "Defined by Qoala, plays a pivotal role in the API, providing contextual information about certain aspects of the product. However, as of now, the details for this field will be shared at a later stage when the product is ready for testing.",
+                        "example": "FL-100"
+                      },
+                      "policies": {
+                        "items": {
+                          "type": "object",
+                          "description": "policy information contains about its identifier, status and so on.",
+                          "properties": {
+                            "number": {
+                              "type": "string",
+                              "description": "unique identifier for policy which is autogenerated by qoala system",
+                              "example": "FL-100-1234"
+                            },
+                            "status": {
+                              "type": "string",
+                              "description": "status of policy, we have set of statuses but we can support mapping status from partner if needed.",
+                              "enum": [
+                                "POLICY_ACTIVE",
+                                "POLICY_ISSUING",
+                                "DATA_VERIFICATION_NEEDED"
+                              ],
+                              "example": "POLICY_ACTIVE"
+                            },
+                            "start_protection_at": {
+                              "type": "string",
+                              "description": "Field serves to designate when protection begins. It holds a time value presented in the ISO 8601 date format, guaranteeing uniformity across systems.",
+                              "example": "2023-02-15T00:01:00+07:00"
+                            },
+                            "end_protection_at": {
+                              "type": "string",
+                              "description": "Field serves to designate the conclusion of protection. It holds a time value presented in the ISO 8601 date format, guaranteeing uniformity across systems.",
+                              "example": "2023-02-15T00:01:00+07:00"
+                            },
+                            "documents": {
+                              "type": "array",
+                              "description": "information regarding to policy document like certificate and policy wording stated by insurer",
+                              "items": {
+                                "$ref": "#/components/schemas/Document"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "202createQuotation": {
+          "description": "Accepted",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "description": "status of response, it will contain success",
+                    "example": "success"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "short message explains about the success response",
+                    "example": "success to create quotes"
+                  },
+                  "code": {
+                    "type": "number",
+                    "description": "http code response",
+                    "example": 202
+                  },
+                  "data": {
+                    "type": "object",
+                    "description": "showing data response",
+                    "properties": {
+                      "partner_transaction_number": {
+                        "type": "string",
+                        "description": "The transaction ID serves as a unique identifier for each transaction initiated through the API. Partners are responsible for generating this ID and ensuring its uniqueness across their transactions.",
+                        "example": 1234
+                      },
+                      "quotation_number": {
+                        "type": "string",
+                        "description": "Unique transaction number generated in qoala system",
+                        "example": "QS-230828-5CL9NB47"
+                      },
+                      "product_code": {
+                        "type": "string",
+                        "description": "Defined by Qoala, plays a pivotal role in the API, providing contextual information about certain aspects of the product. However, as of now, the details for this field will be shared at a later stage when the product is ready for testing.",
+                        "example": "F-CRDC-002"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400createQuotation": {
+          "description": "Bad Request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "number",
+                    "description": "http code response",
+                    "example": 400
+                  },
+                  "error_code": {
+                    "type": "string",
+                    "description": "qoala system error code for bad request\n\n### List of Error Code detail\n\n| Error Code | HTTP Status | Description |\n|---|---|---|  \n| QEC-ERR-001 | 400 | Invalid Request From the partner |\n",
+                    "example": "QEC-ERR-001"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "short message explains about the failed response",
+                    "example": "invalid request"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "status of response, it will contain failed",
+                    "example": "failed"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "401createQuotation": {
+          "description": "Unauthorized",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "number",
+                    "description": "http code response",
+                    "example": 401
+                  },
+                  "error_code": {
+                    "type": "string",
+                    "description": "qoala system error code for invalid token\n\n### List of Error Code detail\n| Error Code | HTTP Status | Description |\n|---|---|---|\n| QC-CLT-KEYA-V1-003 | 401 | Invalid Permission |\n",
+                    "example": "QEC-ERR-401-01"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "short message explains about the failed response",
+                    "example": "invalid unauthorized"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "status of response, it will contain failed",
+                    "example": "failed"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404createQuotation": {
+          "description": "Not Found",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "number",
+                    "description": "http code response",
+                    "example": 404
+                  },
+                  "error_code": {
+                    "type": "string",
+                    "description": "qoala system error code for error classification\n\n### List of Error Code detail\n| Error Code | HTTP Status | Description |\n|---|---|---|\n| QEC-ERR-REST-003 | 404 | Wrong Product Code |\n",
+                    "example": "QEC-ERR-REST-003"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "short message explains about the failed response",
+                    "example": "product code T-FLIGHT-GOTO-00 not found"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "status of response, it will contain failed",
+                    "example": "failed"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "500createQuotation": {
+          "description": "Internal Error",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "number",
+                    "description": "http code response",
+                    "example": 500
+                  },
+                  "error_code": {
+                    "type": "string",
+                    "description": "qoala system error code for error classification\n### List of Error Code detail\n| Error Code | HTTP Status | Description |\n|---|---|---|\n| QEC-ERR-REST-001 | 500 | Internal Server Error |\n",
+                    "example": "QEC-ERR-REST-001"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "short message explains about the failed response",
+                    "example": "internal server error"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "status of response, it will contain failed",
+                    "example": "failed"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
